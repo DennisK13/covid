@@ -1,26 +1,37 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+
+import axios from "axios";
+import React, { useEffect, useContext, useState } from "react";
+
+import './App.css'
+import { National } from "./components/National";
+import Provincial from "./components/Provincial";
 
 function App() {
+  const [provinces, setProvinces] = useState([]);
+  useEffect(() => {
+    getAll(setProvinces);
+  }, []);
+  document.title = "COVID-19 Canada";
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    provinces.length > 0 ? (
+      <div className="App">
+      <h1>Canada Covid-19</h1>
+      <National />
+      <Provincial provinces={provinces} />
     </div>
+    ) : (
+      <div>Loading...</div>
+    )
+
   );
+}
+
+
+const getAll = (setProvinces:React.Dispatch<React.SetStateAction<never[]>>) => {
+  let url = 'https://api.covid19tracker.ca/provinces'
+  axios.get(url).then(res => {
+    setProvinces(res.data.slice(0, 13))
+  })
 }
 
 export default App;
