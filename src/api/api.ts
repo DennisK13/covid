@@ -14,6 +14,10 @@ import axios, { AxiosResponse } from "axios";
 const instance = axios.create({
     baseURL: "https://api.covid19tracker.ca/",
     timeout: 10000,
+    headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+    },
 })
 
 const responseBody = (response: AxiosResponse) => response.data;
