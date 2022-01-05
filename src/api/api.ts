@@ -10,20 +10,17 @@ import {
 
 import axios, { AxiosResponse } from "axios";
 
+// const apiUrl = "https://canada-covid19.herokuapp.com"
 
 const instance = axios.create({
     baseURL: "https://api.covid19tracker.ca/",
     timeout: 10000,
-    headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-    },
 })
 
 const responseBody = (response: AxiosResponse) => response.data;
 
 const requests = {
-    get: (url: string) => instance.get(url).then(responseBody),
+    get: (url: string) => instance.get(url ).then(responseBody),
 }
 
 export const CovidData = {

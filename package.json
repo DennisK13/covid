@@ -2,7 +2,7 @@
   "name": "covid",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://dennisk13.github.io/covid",
+  "homepage": "https://dennisk13.github.io/covid/",
   "dependencies": {
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^12.0.0",
