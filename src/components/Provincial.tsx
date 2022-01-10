@@ -1,171 +1,183 @@
 import React, { useState, useEffect } from "react";
-import { ProvinceData } from "../api/apiInterfaces";
-import { CovidData } from "../api/api";
 import Card from "./Card/Card";
-import { LineChart , Line } from 'recharts';
 import { Local } from "./Local";
+import {
+  LineChart,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  Line,
+} from "recharts";
 interface Props {
-  provinces: any;
+  data?: any;
+  timeseries?: any;
+  setTimeseries?: any;
+  healthUnit?: any;
 }
-
-const Provincial = (props: Props) => {
-  const { provinces } = props;
-  const [provincialSummary, setProvincialSummary] = useState<ProvinceData[]>(
-    []
-  );
-  const [selected, setSelected] = useState<string>("0");
-  const [regionIndex, setRegionIndex] = useState<number>(0);
-  const [regions, setRegion] = useState<any>([]);
-  const [unitID, setUnitID] = useState<string>("3526");
-  const [healthUnits, setHealthUnits] = useState<any>([]);
-  const [selectedHealthRegion, setSelectedHealthRegion] = useState<any>([]);
-
-  useEffect(() => {
-    CovidData.getAllProvinces()
-      .then((res) => {
-        setProvincialSummary(res.data);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-
-    CovidData.getHealthUnits()
-      .then((res) => {
-        setHealthUnits(res.data);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-    return () => {};
-  }, []);
-
-  useEffect(() => {
-    if (provincialSummary.length > 0) {
-      CovidData.getRegions(provincialSummary[parseInt(selected)].province)
-        .then((res) => {
-          setRegion(res);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-
-      return () => {};
+function movingAverage(arr: any, n: number) {
+  let movingAverage = [];
+  let movingSum = 0;
+  for (let i = 0; i < arr.length; i++) {
+    if (i < n) {
+      movingSum += arr[i];
+      movingAverage.push((movingSum / (i + 1)).toFixed(2));
     } else {
-      CovidData.getRegions("ON")
-        .then((res) => {
-          setRegion(res);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-      return () => {};
+      movingSum += arr[i];
+      movingSum -= arr[i - n];
+      movingAverage.push((movingSum / n).toFixed(2));
     }
-  }, [selected]);
+  }
+  return movingAverage;
+}
+const Provincial = (props: Props) => {
+  const { data, timeseries, healthUnit } = props;
+  const [timeline, setTimeline] = useState(90);
+  const [provinceData, setProvinceData] = useState<any>([]);
+  const [provinceName, setProvinceName] = useState<any>("Ontario");
+  const [unit, setUnit] = useState<any>("");
+  const [province, setProvince] = useState<any>([]);
 
   useEffect(() => {
-    if (regions.length > 0 && provincialSummary.length > 0) {
-      if (regions[regionIndex] !== undefined) {
-        setUnitID(regions[regionIndex].hr_uid);
-      } else {
-        setUnitID(regions[0].hr_uid);
-      }
+    if (data.length > 0) {
+      let provinceData = data.filter((x: any) => x.name !== "Canada" && x.name !== "Repatriated travellers")
+      let province = provinceData.filter((x: any) => x.name === provinceName);
+      setProvinceData(province);
     }
-  }, [regions]);
+    
+    if (timeseries.length > 0) {
+      let filtered = timeseries.filter((x: any) => x.name === provinceName);
+      filtered = filtered.slice(-timeline);
+      let temp = filtered.map((x: any) => x.cases);
+      let moving = movingAverage(temp, 7);
+      let temp2 = filtered.map((x: any) => x.deaths);
+      let moving2 = movingAverage(temp2, 7);
+      let tempProvince = filtered.map((x: any, i: number) => ({
+        ...x,
+        moving: moving[i],
+        moving_deaths: parseInt(moving2[i]),
+      }));
 
-  useEffect(() => {
-    setSelectedHealthRegion(
-      healthUnits.filter((unit: any) => unit.hr_uid == unitID)
-    );
-  }, [unitID, healthUnits]);
-  return (
-    <>
-      {provincialSummary.length > 0 ? (
-        <div style={{margin: 20}}>
-            <div style={{display:'flex', justifyContent:'space-around'}}>
-            <div style={{flexDirection:'column'}}>
-            <h5>Provinces:</h5>
-            <select
-            onChange={(e) => {
-              setSelected(e.target.value);
-            }}
-          >
-            {provinces.map((item:any) => (
-              <option key={item.id-1} value={item.id-1}>
-                {item.name}
-              </option>
-            ))}
-          </select>
-          <h5>{provinces[parseInt(selected)].name} <span style={{color: provinces[parseInt(selected)].data_status !== 'Reported' ? 'red' : 'green'}}>{provinces[parseInt(selected)].data_status !== "Reported" ? " - Not Yet Submitted" : " - Reported"}</span></h5>
-            <Card
-              total={provincialSummary[parseInt(selected)][
-                "total_cases"
-              ]}
-              type="cases"
-              change={provincialSummary[parseInt(selected)][
-                "change_cases"
-              ]}
-            />
-            <Card
-              total={provincialSummary[parseInt(selected)][
-                "total_fatalities"
-              ]}
-              type="deaths"
-              change={provincialSummary[parseInt(selected)][
-                "change_fatalities"
-              ]}
-            />
-            <Card
-              total={provincialSummary[parseInt(selected)][
-                "total_hospitalizations"
-              ]}
-              type="hospitalized"
-              change={provincialSummary[parseInt(selected)][
-                "change_hospitalizations"
-              ]}
-            />
-            <Card
-              total={provincialSummary[parseInt(selected)][
-                "total_recoveries"
-              ]}
-              type="recovered"
-              change={provincialSummary[parseInt(selected)][
-                "change_recoveries"
-              ]}
-            />
-            <Card
-              total={provincialSummary[parseInt(selected)][
-                "total_tests"
-              ]}
-              type="tests"
-              change={provincialSummary[parseInt(selected)][
-                "change_tests"
-              ]}
-            />
+      setProvince(tempProvince);
+    }
+    if (healthUnit.length > 0) {
+      setUnit(healthUnit.filter((x: any) => x.province === provinceName));
+    }
+  }, [provinceName, data, timeline]);
+
+  return data.length > 0 ? (
+    <div style={{ width: "100%", border: "2px solid black" }}>
+      <div>
+        <h5>Provincial</h5>
+        <select
+          value={provinceName}
+          onChange={(e) => setProvinceName(e.target.value)}
+        >
+          {data.map((item: any, i: number) => (
+            <option key={i} value={item.name}>
+              {item.name}
+            </option>
+          ))}
+        </select>
+
+        {provinceData.map((item: any, i: number) => (
+          <div key={i}>
+            <div className="row center">
+              <Card
+                total={item.totalCases}
+                type={"cases"}
+                change={item.cases}
+              />
+              <Card
+                total={item.totalDeaths}
+                type={"deaths"}
+                change={item.deaths}
+              />
+              <Card
+                total={item.totaltested}
+                type={"tested"}
+                change={item.tested}
+              />
+            </div>
+            <div className="row center" style={{ marginTop: "25px" }}>
+              <button onClick={() => setTimeline(90)}>3 months</button>
+              <button onClick={() => setTimeline(180)}>6 months</button>
+              <button onClick={() => setTimeline(365)}>12 months</button>
+              <button onClick={() => setTimeline(0)}>All Time</button>
+            </div>
+            <div>{timeline === 0 ? "All Time" : timeline + " days"}</div>
           </div>
-          <div >
-          <div>
-            <h5>Regions:</h5>
-            <select
-              onChange={(e) => {
-                setUnitID(e.target.value);
-                setRegionIndex(e.target.selectedIndex);
-              }}
-              style={{width:250}}
-            >
-              {regions.map((item: any, i: number) => (
-                <option key={i} value={item.hr_uid}>
-                  {item.engname}
-                </option>
-              ))}
-            </select>
+        ))}
+      </div>
+      <div className="row center">
+        <div style={{ width: "45%" }}>
+          <p>Cases</p>
+          <div className="row" style={{ margin: "20px" }}>
+            <ResponsiveContainer width="100%" aspect={1}>
+              <LineChart width={700} height={500} data={province}>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  horizontal={true}
+                  vertical={false}
+                />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Legend verticalAlign="top" />
+
+                <Line
+                  dataKey={"cases"}
+                  name="Cases"
+                  fill="#8884d8"
+                  dot={false}
+                  strokeWidth={2}
+                  type={"monotone"}
+                />
+                <Line
+                  dataKey={"moving"}
+                  name="Moving Average Cases"
+                  stroke="#FFA500"
+                  dot={false}
+                  strokeWidth={2}
+                  type={"monotone"}
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
-          <Local healthUnits={selectedHealthRegion} name={regions[regionIndex]}/>
-          </div>
-          </div>
-             
         </div>
-      ) : null}
-    </>
+        <div style={{ width: "45%" }}>
+          <p>Deaths</p>
+          <div className="row" style={{ margin: "20px" }}>
+            <ResponsiveContainer width="100%" aspect={1}>
+              <LineChart width={700} height={500} data={province}>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  horizontal={true}
+                  vertical={false}
+                />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Legend verticalAlign="top" />
+                <Line
+                  dataKey={"moving_deaths"}
+                  name="Moving Average Deaths"
+                  stroke="red"
+                  dot={false}
+                  strokeWidth={2}
+                  type={"monotone"}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+      <Local healthUnits={unit} name={provinceName} />
+    </div>
+  ) : (
+    <div>Loading</div>
   );
 };
 

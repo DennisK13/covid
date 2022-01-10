@@ -1,95 +1,139 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Card from "../components/Card/Card";
+import {
+  LineChart,
+  Bar,
+  BarChart,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  Line,
+  Text,
+} from "recharts";
 interface Props {
-  healthUnits: any;
-  name?: any;
+  healthUnits?: any;
+  name: any;
 }
-
-interface LocalRegion {
-  hr_uid: number;
-  date: string;
-  change_cases: number | null;
-  change_fataities: number | null;
-  change_tests: number | null;
-  change_hospitalizations: number | null;
-  change_criticals: number | null;
-  change_recoveries: number | null;
-  change_vaccinations: number | null;
-  change_vaccinated: number | null;
-  change_boosters_1: number | null;
-  total_cases: number | null;
-  total_fatalities: number | null;
-  total_tests: number | null;
-  total_hospitalizations: number | null;
-  total_criticals: number | null;
-  total_recoveries: number | null;
-  total_vaccinations: number | null;
-  total_vaccinated: number | null;
-  total_boosters_1: number | null;
-}
+const everyNth = (arr: Array<any>, nth: number) =>
+  arr.filter((e, i) => i % nth === nth - 1);
 
 export const Local = (props: Props) => {
   const { healthUnits, name } = props;
+  // let temp = healthUnits.filter((x: any) => x.name === name);
+  const [region, setRegion] = useState<any>("Algoma");
+  const [timeseries, setTimeseries] = useState([]);
+  const [recent, setRecent] = useState<any>(null);
+  const [regionNames, setRegionNames] = useState<any>([]);
 
-  return healthUnits.length > 0 && name ? (
+  useEffect(() => {
+    if (healthUnits.length > 0) {
+      let temp = everyNth(healthUnits, 7);
+      temp = temp.map((x: any) => x.health_region);
+      setRegionNames(temp);
+      setRegion(temp[0]);
+      let selected = healthUnits.filter(
+        (item: any) => item.health_region == region
+      );
+      setTimeseries(selected);
+      setRecent(selected[selected.length - 1]);
+    }
+  }, [healthUnits]);
+
+  useEffect(() => {
+    if (healthUnits.length > 0) {
+      let selected = healthUnits.filter(
+        (item: any) => item.health_region == region
+      );
+      setTimeseries(selected);
+      setRecent(selected[selected.length - 1]);
+    }
+  }, [region]);
+
+  return healthUnits.length > 0 ? (
     <>
-      
-      <div style={{flexDirection:'column' }}>
-        <h5>{name?.engname}</h5>
-        <Card
-          total={healthUnits[0].total_cases || 0}
-          type="cases"
-          change={
-            healthUnits[0].change_cases ? healthUnits[0].change_cases : "0"
-          }
-        />
-        <Card
-          total={healthUnits[0].total_tests ? healthUnits[0].total_tests : "0"}
-          type="tests"
-          change={
-            healthUnits[0].change_tests ? healthUnits[0].change_tests : "0"
-          }
-        />
-        <Card
-          total={
-            healthUnits[0].total_fatalities
-              ? healthUnits[0].total_fatalities
-              : "0"
-          }
-          type="deaths"
-          change={
-            healthUnits[0].change_fatalities
-              ? healthUnits[0].change_fatalities
-              : "0"
-          }
-        />
-        <Card
-          total={
-            healthUnits[0].total_hospitalizations
-              ? healthUnits[0].total_hospitalizations
-              : "0"
-          }
-          type="hospitalizations"
-          change={
-            healthUnits[0].change_hospitalizations
-              ? healthUnits[0].change_hospitalizations
-              : "0"
-          }
-        />
-        <Card
-          total={
-            healthUnits[0].total_recovered
-              ? healthUnits[0].total_recovered
-              : "0"
-          }
-          type="recovered"
-          change={
-            healthUnits[0].change_recovered
-              ? healthUnits[0].change_recovered
-              : "0"
-          }
-        />
+      <div>
+        <h5>Local: Last 7 days</h5>
+        <select onChange={(e) => setRegion(e.target.value)} value={region}>
+          {regionNames.map((x: any, i: number) => (
+            <option key={i} value={x}>
+              {x}
+            </option>
+          ))}
+        </select>
+        {recent ? (
+          <div className="row center">
+            <div className="">
+              <Card
+                total={formatNumber(recent.totalCases)}
+                type={"cases"}
+                change={formatNumber(recent.cases)}
+              />
+              <Card
+                total={formatNumber(recent.numtotal_last7)}
+                type={"total weekly cases"}
+                change={formatNumber(recent.avgtotal_last7)}
+                today={true}
+              />
+              <Card
+                total={recent.totalDeaths}
+                type={"deaths"}
+                change={recent.deaths}
+              />
+              <Card
+                total={recent.numdeaths_last7}
+                type={"total weekly deaths"}
+                change={recent.avgdeaths_last7}
+                today={true}
+              />
+            </div>
+            <div className="row" style={{ margin: "20px", width: "75%" }}>
+              <ResponsiveContainer width="100%" aspect={3}>
+                <LineChart width={700} height={500} data={timeseries}>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    horizontal={true}
+                    vertical={false}
+                  />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend verticalAlign="top" />
+
+                  <Line
+                    dataKey={"cases"}
+                    name="Cases"
+                    fill="#8884d8"
+                    dot={false}
+                    strokeWidth={2}
+                    type={"monotone"}
+                  />
+                  <Line
+                    dataKey={"avgtotal_last7"}
+                    name="Moving Average Cases"
+                    stroke="#FFA500"
+                    dot={false}
+                    strokeWidth={2}
+                    type={"monotone"}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        ) : null}
       </div>
     </>
   ) : null;
 };
+
+function formatNumber(num: string | number) {
+  if (num === null) {
+    return "null";
+  }
+  if (typeof num === "string") {
+    num = parseInt(num);
+  }
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
