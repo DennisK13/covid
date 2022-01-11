@@ -113,8 +113,9 @@ function App() {
       <h1>
         Canada Covid-19 <FontAwesomeIcon icon={faVirus} color="darkred" />
       </h1>
-
-      <National data={data} />
+      <div style={{ padding: "35px" }}>
+      <National data={data} timeseries={timeseries} />
+      </div>
       <div className="row center" style={{ padding: "35px" }}>
         <Provincial data={data} timeseries={timeseries} healthUnit={healthUnit} />
       </div>

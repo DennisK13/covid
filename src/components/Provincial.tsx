@@ -10,6 +10,8 @@ import {
   Legend,
   ResponsiveContainer,
   Line,
+  Area,
+  AreaChart
 } from "recharts";
 interface Props {
   data?: any;
@@ -63,6 +65,7 @@ const Provincial = (props: Props) => {
       setProvince(tempProvince);
     }
     if (healthUnit.length > 0) {
+
       setUnit(healthUnit.filter((x: any) => x.province === provinceName));
     }
   }, [provinceName, data, timeline]);
@@ -70,12 +73,12 @@ const Provincial = (props: Props) => {
   return data.length > 0 ? (
     <div style={{ width: "100%", border: "2px solid black" }}>
       <div>
-        <h5>Provincial</h5>
+        <h4>Provincial</h4>
         <select
           value={provinceName}
           onChange={(e) => setProvinceName(e.target.value)}
         >
-          {data.map((item: any, i: number) => (
+          {data.filter((x: any) => x.name !== 'Canada' && x.name !== 'Repatriated travellers').map((item: any, i: number) => (
             <option key={i} value={item.name}>
               {item.name}
             </option>
@@ -135,14 +138,14 @@ const Provincial = (props: Props) => {
                   strokeWidth={2}
                   type={"monotone"}
                 />
-                <Line
+                {/* <Area
                   dataKey={"moving"}
                   name="Moving Average Cases"
                   stroke="#FFA500"
                   dot={false}
                   strokeWidth={2}
                   type={"monotone"}
-                />
+                /> */}
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -164,7 +167,8 @@ const Provincial = (props: Props) => {
                 <Line
                   dataKey={"moving_deaths"}
                   name="Moving Average Deaths"
-                  stroke="red"
+                  stroke="darkred"
+                  fill="red"
                   dot={false}
                   strokeWidth={2}
                   type={"monotone"}
@@ -174,7 +178,7 @@ const Provincial = (props: Props) => {
           </div>
         </div>
       </div>
-      <Local healthUnits={unit} name={provinceName} />
+      <Local healthUnits={unit} />
     </div>
   ) : (
     <div>Loading</div>

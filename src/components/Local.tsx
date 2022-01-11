@@ -2,8 +2,6 @@ import React, { useState, useEffect } from "react";
 import Card from "../components/Card/Card";
 import {
   LineChart,
-  Bar,
-  BarChart,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -11,18 +9,15 @@ import {
   Legend,
   ResponsiveContainer,
   Line,
-  Text,
 } from "recharts";
 interface Props {
   healthUnits?: any;
-  name: any;
 }
 const everyNth = (arr: Array<any>, nth: number) =>
   arr.filter((e, i) => i % nth === nth - 1);
 
 export const Local = (props: Props) => {
-  const { healthUnits, name } = props;
-  // let temp = healthUnits.filter((x: any) => x.name === name);
+  const { healthUnits } = props;
   const [region, setRegion] = useState<any>("Algoma");
   const [timeseries, setTimeseries] = useState([]);
   const [recent, setRecent] = useState<any>(null);
@@ -31,11 +26,12 @@ export const Local = (props: Props) => {
   useEffect(() => {
     if (healthUnits.length > 0) {
       let temp = everyNth(healthUnits, 7);
+      temp = temp.filter((x: any) => x.health_region !== "Not Reported");
       temp = temp.map((x: any) => x.health_region);
       setRegionNames(temp);
       setRegion(temp[0]);
       let selected = healthUnits.filter(
-        (item: any) => item.health_region == region
+        (item: any) => item.health_region === region
       );
       setTimeseries(selected);
       setRecent(selected[selected.length - 1]);
@@ -45,7 +41,7 @@ export const Local = (props: Props) => {
   useEffect(() => {
     if (healthUnits.length > 0) {
       let selected = healthUnits.filter(
-        (item: any) => item.health_region == region
+        (item: any) => item.health_region === region
       );
       setTimeseries(selected);
       setRecent(selected[selected.length - 1]);
@@ -67,7 +63,7 @@ export const Local = (props: Props) => {
           <div className="row center">
             <div className="">
               <Card
-                total={formatNumber(recent.totalCases)}
+                total={(recent.totalCases)}
                 type={"cases"}
                 change={formatNumber(recent.cases)}
               />
