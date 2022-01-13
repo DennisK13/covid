@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
   Line,
   Area,
-  AreaChart
+  AreaChart,
 } from "recharts";
 interface Props {
   data?: any;
@@ -44,11 +44,13 @@ const Provincial = (props: Props) => {
 
   useEffect(() => {
     if (data.length > 0) {
-      let provinceData = data.filter((x: any) => x.name !== "Canada" && x.name !== "Repatriated travellers")
+      let provinceData = data.filter(
+        (x: any) => x.name !== "Canada" && x.name !== "Repatriated travellers"
+      );
       let province = provinceData.filter((x: any) => x.name === provinceName);
       setProvinceData(province);
     }
-    
+
     if (timeseries.length > 0) {
       let filtered = timeseries.filter((x: any) => x.name === provinceName);
       filtered = filtered.slice(-timeline);
@@ -65,24 +67,29 @@ const Provincial = (props: Props) => {
       setProvince(tempProvince);
     }
     if (healthUnit.length > 0) {
-
       setUnit(healthUnit.filter((x: any) => x.province === provinceName));
     }
   }, [provinceName, data, timeline]);
 
   return data.length > 0 ? (
-    <div style={{ width: "100%", border: "2px solid black" }}>
+    <div >
+      <div style={{ border: "2px solid black"}} className="center">
       <div>
         <h4>Provincial</h4>
         <select
           value={provinceName}
           onChange={(e) => setProvinceName(e.target.value)}
         >
-          {data.filter((x: any) => x.name !== 'Canada' && x.name !== 'Repatriated travellers').map((item: any, i: number) => (
-            <option key={i} value={item.name}>
-              {item.name}
-            </option>
-          ))}
+          {data
+            .filter(
+              (x: any) =>
+                x.name !== "Canada" && x.name !== "Repatriated travellers"
+            )
+            .map((item: any, i: number) => (
+              <option key={i} value={item.name}>
+                {item.name}
+              </option>
+            ))}
         </select>
 
         {provinceData.map((item: any, i: number) => (
@@ -104,13 +111,6 @@ const Provincial = (props: Props) => {
                 change={item.tested}
               />
             </div>
-            <div className="row center" style={{ marginTop: "25px" }}>
-              <button onClick={() => setTimeline(90)}>3 months</button>
-              <button onClick={() => setTimeline(180)}>6 months</button>
-              <button onClick={() => setTimeline(365)}>12 months</button>
-              <button onClick={() => setTimeline(0)}>All Time</button>
-            </div>
-            <div>{timeline === 0 ? "All Time" : timeline + " days"}</div>
           </div>
         ))}
       </div>
@@ -176,9 +176,24 @@ const Provincial = (props: Props) => {
               </LineChart>
             </ResponsiveContainer>
           </div>
+          
         </div>
+        
       </div>
+      <div>
+      <div className="row center" style={{ marginTop: "25px" }}>
+        <button onClick={() => setTimeline(90)}>3 months</button>
+        <button onClick={() => setTimeline(180)}>6 months</button>
+        <button onClick={() => setTimeline(365)}>12 months</button>
+        <button onClick={() => setTimeline(0)}>All Time</button>
+      </div>
+      <div>{timeline === 0 ? "All Time" : timeline + " days"}</div>
+      </div>
+      </div>
+      <div style={{paddingTop:'70px'}}>
       <Local healthUnits={unit} />
+      </div>
+      
     </div>
   ) : (
     <div>Loading</div>

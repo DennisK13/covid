@@ -50,7 +50,7 @@ export const Local = (props: Props) => {
 
   return healthUnits.length > 0 ? (
     <>
-      <div>
+      <div style={{border:'2px black solid'}}>
         <h5>Local: Last 7 days</h5>
         <select onChange={(e) => setRegion(e.target.value)} value={region}>
           {regionNames.map((x: any, i: number) => (

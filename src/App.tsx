@@ -116,7 +116,7 @@ function App() {
       <div style={{ padding: "35px" }}>
       <National data={data} timeseries={timeseries} />
       </div>
-      <div className="row center" style={{ padding: "35px" }}>
+      <div style={{ padding: "35px" }}>
         <Provincial data={data} timeseries={timeseries} healthUnit={healthUnit} />
       </div>
     </div>
