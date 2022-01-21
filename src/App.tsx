@@ -1,21 +1,24 @@
 import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {  faVirus } from "@fortawesome/free-solid-svg-icons";
+import { faVirus } from "@fortawesome/free-solid-svg-icons";
 import "./App.css";
 import { National } from "./components/National";
 import Provincial from "./components/Provincial";
-
+import { useWindowSize } from "./hooks/useWindowSize";
+import { Local } from "./components/Local";
 // create a function for seven day moving average
 
 function App() {
   // const [provinces, setProvinces] = useState([]);
   const [national, setNational] = useState<any>([]);
   const [timeseries, setTimeseries] = useState<any>([]);
-
+  const [aspect, setAspect] = useState<number>(1);
   const [summary, setSummary] = useState<any>([]);
   const [data, setData] = useState<any>([]);
   const [healthUnit, setHealthUnit] = useState<any>([]);
-
+  const window = useWindowSize();
+  const [provinceData, setProvinceData] = useState<any>([]);
+  const [provinceName, setProvinceName] = useState<any>("Ontario");
   useEffect(() => {
     var requestOptions: RequestInit = {
       method: "GET",
@@ -38,18 +41,22 @@ function App() {
       .then((result) => setSummary(result))
       .catch((error) => console.log("error", error));
 
-      fetch(
-        "https://sheets.googleapis.com/v4/spreadsheets/15A3xx5H9nt36JmJX5S6NpGgyVtzKDYifJt2rn05Jb8g/values/Sheet10?key=AIzaSyCoeJxmBR8fmBoFpaisChI0SlLMBH2nlcY",
-        requestOptions
-      )
-        .then((response) => response.json())
-        .then((result) => setHealthUnit(result['values']))
-        .catch((error) => console.log("error", error));
+    fetch(
+      "https://sheets.googleapis.com/v4/spreadsheets/15A3xx5H9nt36JmJX5S6NpGgyVtzKDYifJt2rn05Jb8g/values/Sheet10?key=AIzaSyCoeJxmBR8fmBoFpaisChI0SlLMBH2nlcY",
+      requestOptions
+    )
+      .then((response) => response.json())
+      .then((result) => setHealthUnit(result["values"]))
+      .catch((error) => console.log("error", error));
     return () => {};
   }, []);
 
   useEffect(() => {
-    if (summary["values"].length > 0 && national["values"].length > 0 && healthUnit.length > 0) {
+    if (
+      summary["values"].length > 0 &&
+      national["values"].length > 0 &&
+      healthUnit.length > 0
+    ) {
       let values = summary["values"].map((x: any) => {
         return {
           id: x[0],
@@ -74,8 +81,8 @@ function App() {
           deaths: x[5],
           totalDeaths: x[6],
           numtotal_last14: x[7],
-          numdeaths_last14: (x[8]),
-          numtotal_last7: (x[9]),
+          numdeaths_last14: x[8],
+          numtotal_last7: x[9],
           numdeaths_last7: parseInt(x[10]),
           avgtotal_last7: parseInt(x[11]).toFixed(0),
           avgdeaths_last7: x[12],
@@ -106,6 +113,14 @@ function App() {
     }
   }, [summary, national]);
 
+  useEffect(() => {
+    if (window.width !== undefined && window.width < 940) {
+      setAspect(2);
+    } else {
+      setAspect(1);
+    }
+  }, [window]);
+
   document.title = "COVID-19 Canada";
 
   return data.length > 0 ? (
@@ -113,15 +128,30 @@ function App() {
       <h1>
         Canada Covid-19 <FontAwesomeIcon icon={faVirus} color="darkred" />
       </h1>
+
       <div style={{ padding: "35px" }}>
-      <National data={data} timeseries={timeseries} />
+        <National data={data} timeseries={timeseries} aspect={aspect} />
       </div>
+
       <div style={{ padding: "35px" }}>
-        <Provincial data={data} timeseries={timeseries} healthUnit={healthUnit} />
+        <Provincial
+          data={data}
+          timeseries={timeseries}
+          healthUnit={healthUnit}
+          aspect={aspect}
+          provinceData={provinceData}
+          provinceName={provinceName}
+          setProvinceData={setProvinceData}
+          setProvinceName={setProvinceName}
+        />
+      </div>
+
+      <div style={{ padding: "35px" }}>
+        <Local healthUnit={healthUnit} aspect={aspect} provinceName={provinceName} />
       </div>
     </div>
   ) : (
-    <div style={{textAlign:'center'}}>Loading... </div>
+    <div style={{ textAlign: "center" }}>Loading... </div>
   );
 }
 

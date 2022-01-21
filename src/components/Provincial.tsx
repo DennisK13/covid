@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Card from "./Card/Card";
-import { Local } from "./Local";
 import {
   LineChart,
   XAxis,
@@ -10,14 +9,17 @@ import {
   Legend,
   ResponsiveContainer,
   Line,
-  Area,
-  AreaChart,
 } from "recharts";
 interface Props {
   data?: any;
   timeseries?: any;
   setTimeseries?: any;
   healthUnit?: any;
+  aspect: number;
+  provinceData?: any;
+  setProvinceName?: any;
+  provinceName?: any;
+  setProvinceData?: any;
 }
 function movingAverage(arr: any, n: number) {
   let movingAverage = [];
@@ -35,11 +37,17 @@ function movingAverage(arr: any, n: number) {
   return movingAverage;
 }
 const Provincial = (props: Props) => {
-  const { data, timeseries, healthUnit } = props;
-  const [timeline, setTimeline] = useState(90);
-  const [provinceData, setProvinceData] = useState<any>([]);
-  const [provinceName, setProvinceName] = useState<any>("Ontario");
-  const [unit, setUnit] = useState<any>("");
+  const {
+    data,
+    timeseries,
+    healthUnit,
+    aspect,
+    provinceData,
+    provinceName,
+    setProvinceData,
+    setProvinceName,
+  } = props;
+  const [timeline, setTimeline] = useState<number>(90);
   const [province, setProvince] = useState<any>([]);
 
   useEffect(() => {
@@ -63,137 +71,162 @@ const Provincial = (props: Props) => {
         moving: moving[i],
         moving_deaths: parseInt(moving2[i]),
       }));
-
       setProvince(tempProvince);
     }
-    if (healthUnit.length > 0) {
-      setUnit(healthUnit.filter((x: any) => x.province === provinceName));
-    }
+
   }, [provinceName, data, timeline]);
 
   return data.length > 0 ? (
-    <div >
-      <div style={{ border: "2px solid black"}} className="center">
-      <div>
-        <h4>Provincial</h4>
-        <select
-          value={provinceName}
-          onChange={(e) => setProvinceName(e.target.value)}
-        >
-          {data
-            .filter(
-              (x: any) =>
-                x.name !== "Canada" && x.name !== "Repatriated travellers"
-            )
-            .map((item: any, i: number) => (
-              <option key={i} value={item.name}>
-                {item.name}
-              </option>
-            ))}
-        </select>
+    <div>
+      <div style={{ border: "2px solid black" }} className="center">
+        <div>
+          <h4>Provincial</h4>
+          <select
+            value={provinceName}
+            onChange={(e) => setProvinceName(e.target.value)}
+          >
+            {data
+              .filter(
+                (x: any) =>
+                  x.name !== "Canada" && x.name !== "Repatriated travellers"
+              )
+              .map((item: any, i: number) => (
+                <option key={i} value={item.name}>
+                  {item.name}
+                </option>
+              ))}
+          </select>
 
-        {provinceData.map((item: any, i: number) => (
-          <div key={i}>
-            <div className="row center">
-              <Card
-                total={item.totalCases}
-                type={"cases"}
-                change={item.cases}
-              />
-              <Card
-                total={item.totalDeaths}
-                type={"deaths"}
-                change={item.deaths}
-              />
-              <Card
-                total={item.totaltested}
-                type={"tested"}
-                change={item.tested}
-              />
+          {provinceData.map((item: any, i: number) => (
+            <div key={i}>
+              <div className="row center">
+                <Card
+                  total={item.totalCases}
+                  type={"cases"}
+                  change={item.cases}
+                />
+                <Card
+                  total={item.totalDeaths}
+                  type={"deaths"}
+                  change={item.deaths}
+                />
+                <Card
+                  total={item.totaltested}
+                  type={"tested"}
+                  change={item.tested}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="chart center">
+          <div className="column">
+            <p>Cases</p>
+            <div>
+              <ResponsiveContainer width="100%" aspect={aspect}>
+                <LineChart width={700} height={500} data={province}>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    horizontal={true}
+                    vertical={false}
+                  />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend verticalAlign="top" />
+
+                  <Line
+                    dataKey={"cases"}
+                    name="Cases"
+                    fill="#8884d8"
+                    dot={false}
+                    strokeWidth={2}
+                    type={"monotone"}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
-        ))}
-      </div>
-      <div className="row center">
-        <div style={{ width: "45%" }}>
-          <p>Cases</p>
-          <div className="row" style={{ margin: "20px" }}>
-            <ResponsiveContainer width="100%" aspect={1}>
-              <LineChart width={700} height={500} data={province}>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  horizontal={true}
-                  vertical={false}
-                />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Legend verticalAlign="top" />
-
-                <Line
-                  dataKey={"cases"}
-                  name="Cases"
-                  fill="#8884d8"
-                  dot={false}
-                  strokeWidth={2}
-                  type={"monotone"}
-                />
-                {/* <Area
-                  dataKey={"moving"}
-                  name="Moving Average Cases"
-                  stroke="#FFA500"
-                  dot={false}
-                  strokeWidth={2}
-                  type={"monotone"}
-                /> */}
-              </LineChart>
-            </ResponsiveContainer>
+          <div className="column">
+            <p>Deaths</p>
+            <div>
+              <ResponsiveContainer width="100%" aspect={aspect}>
+                <LineChart width={700} height={500} data={province}>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    horizontal={true}
+                    vertical={false}
+                  />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend verticalAlign="top" />
+                  <Line
+                    dataKey={"moving_deaths"}
+                    name="Moving Average Deaths"
+                    stroke="darkred"
+                    fill="red"
+                    dot={false}
+                    strokeWidth={2}
+                    type={"monotone"}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
-        <div style={{ width: "45%" }}>
-          <p>Deaths</p>
-          <div className="row" style={{ margin: "20px" }}>
-            <ResponsiveContainer width="100%" aspect={1}>
-              <LineChart width={700} height={500} data={province}>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  horizontal={true}
-                  vertical={false}
-                />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Legend verticalAlign="top" />
-                <Line
-                  dataKey={"moving_deaths"}
-                  name="Moving Average Deaths"
-                  stroke="darkred"
-                  fill="red"
-                  dot={false}
-                  strokeWidth={2}
-                  type={"monotone"}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+        <div>
+          <div className="row center" style={{ padding: "25px" }}>
+            <button
+              onClick={() => {
+                setTimeline(90);
+              }}
+              style={{
+                backgroundColor: timeline === 90 ? "red" : "gray",
+                color: "white",
+                minWidth: "80px",
+                minHeight: "25px",
+              }}
+            >
+              3 months
+            </button>
+            <button
+              onClick={() => setTimeline(180)}
+              style={{
+                backgroundColor: timeline === 180 ? "red" : "gray",
+                color: "white",
+                minWidth: "80px",
+                minHeight: "25px",
+              }}
+            >
+              6 months
+            </button>
+            <button
+              onClick={() => setTimeline(365)}
+              style={{
+                backgroundColor: timeline === 365 ? "red" : "gray",
+                color: "white",
+                minWidth: "80px",
+                minHeight: "25px",
+              }}
+            >
+              12 months
+            </button>
+            <button
+              onClick={() => setTimeline(0)}
+              style={{
+                backgroundColor: timeline === 0 ? "red" : "gray",
+                color: "white",
+                minWidth: "80px",
+                minHeight: "25px",
+              }}
+            >
+              All Time
+            </button>
           </div>
-          
+          {/* <div>{timeline === 0 ? "All Time" : timeline + " days"}</div> */}
         </div>
-        
       </div>
-      <div>
-      <div className="row center" style={{ marginTop: "25px" }}>
-        <button onClick={() => setTimeline(90)}>3 months</button>
-        <button onClick={() => setTimeline(180)}>6 months</button>
-        <button onClick={() => setTimeline(365)}>12 months</button>
-        <button onClick={() => setTimeline(0)}>All Time</button>
-      </div>
-      <div>{timeline === 0 ? "All Time" : timeline + " days"}</div>
-      </div>
-      </div>
-      <div style={{paddingTop:'70px'}}>
-      <Local healthUnits={unit} />
-      </div>
-      
     </div>
   ) : (
     <div>Loading</div>

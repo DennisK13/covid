@@ -4,8 +4,7 @@ interface Props {
   change: any;
   today?: boolean;
 }
-const Card = (props: any) => {
-  const { total, type, change, today } = props;
+const Card = ( { total, type, change, today }: Props) => {
   if (total === null || change === null || type === null) {
     return (
       <div
